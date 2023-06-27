@@ -1,20 +1,17 @@
 #!/bin/bash
 
-# For debugging:
-set -x
-
 # Set file path of where you want to save the speed test data
-data_file="/home/boaz/Documents/speedtest_cron/tester_data.json"
+data_file="./speedtest_data.json"
 
 # Check if data file exists, that it is readable, and writable. If any of these fail, fix, then restart the loop.
 if [ -e "$data_file" ] && [ -r "$data_file" ] && [ -w "$data_file" ]; then
 	:  # File exists, is readable and writeable. No action needed.
 elif ! [ -e "$data_file" ]; then
-	touch "$data_file"
+	$(umask 066 && touch "$data_file") || $(sudo umask 066 && sudo touch "$data_file")
 elif ! [ -r "$data_file" ]; then
-	sudo chmod u+r "$data_file"
+	chmod u+r "$data_file" || sudo chmod u+r "$data_file"
 elif ! [ -w "$data_file" ]; then
-	sudo chmod u+w "$data_file"
+	chmod u+w "$data_file" || sudo chmod u+w "$data_file"
 fi
 
 # set existing data from file to variable
@@ -70,11 +67,12 @@ done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}' | awk 'FNR <= 1 {pr
 # Merge the existing data with the new object using jq and the "*" operator
 
 # ERROR: the variable $existing_data is empty and this is what's causing the code to break
+echo "$existing_data"
 updated_data=$(jq --argjson existing_data "$existing_data" --argjson date_json "$date_json" \
                 '.speedtest |= $date_json' <<<"$existing_data")
 
 # Overwrite the file with the updated JSON data
-echo "$updated_data" | sudo tee "$data_file"
+$(echo "$updated_data" | tee "$data_file") || $(echo "$updated_data" | sudo tee "$data_file")
 
 # This section is so that you don't have to keep your computer on all the time to passively run this script
 # This uses rtcwake (Real Time Clock Wake) and xprintidle (prints time the computer has been idle in ms)
