@@ -30,6 +30,11 @@ date_json=$(jq -n --argjson "$date" {} \
               '$ARGS.named'
 )
 
+# json for all server names and speeds, each one added for each speedtest server loop
+servers_json=$(jq -n --argjson "$date" {} \
+              '$ARGS.named'
+)
+
 # Run the loop with output redirected to a process substitution
 while read -r p # The value of p is set by the "done < <(speedtest..." statement at the bottom of the loop
 do
@@ -54,13 +59,16 @@ do
                              "upload": ($upload | tonumber)
                             }')
         # Nest upload and download speeds json into the server name json
-	server_name_json=$(jq -n --argjson "$server_name" "$download_upload_json" \
+	new_server_json=$(jq -n --argjson "$server_name" "$download_upload_json" \
 		-r '$ARGS.named')
         # Merge the server name json into the date json
-	echo "pre-merge server_name_json value: "$server_name_json
-        date_json=$(jq --argjson existing_entries "$date_json" --argjson new_server_entry "$server_name_json" \
-                '. * $new_server_entry' <<< "$date_json")
-done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}' | awk 'FNR <= 1 {print $1}')
+
+        date_json=$('$servers_json' | jq --argjson new_server_entry "$new_server_json" + $new_server_entry)
+        # date_json=$(jq --argjson existing_entries "$servers_json" \
+        #         --argjson new_server_entry "$new_server_json" \
+        #         '$existing_entries + $new_server_entry' <<< '$existing_entries')
+                # '$existing[$parent] += {($key): $value}' <<< ""
+done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}' | awk 'FNR <= 2 {print $1}')
 #done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}')
 
 # Now that all the data is collected and stored in the date_json variable, save it to the file under the '.speedtest' object
@@ -69,7 +77,7 @@ done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}' | awk 'FNR <= 1 {pr
 # ERROR: the variable $existing_data is empty and this is what's causing the code to break
 echo "$existing_data"
 updated_data=$(jq --argjson existing_data "$existing_data" --argjson date_json "$date_json" \
-                '.speedtest |= $date_json' <<<"$existing_data")
+                '.speedtest += $date_json' <<<"$existing_data")
 
 # Overwrite the file with the updated JSON data
 $(echo "$updated_data" | tee "$data_file") || $(echo "$updated_data" | sudo tee "$data_file")
