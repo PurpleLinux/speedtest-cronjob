@@ -16,26 +16,15 @@ fi
 
 # set existing data from file to variable
 existing_data=$(<"$data_file")
-# Check if the '.speedtest' object exists in the existing JSON data
-if ! [ $(jq 'has("speedtest")' <<< "$existing_data") ]; then
-  # Create the .speedtest object if it doesn't exist
-  echo "no speedtest found in \$existing_data"
-  existing_data='{"speedtest":""}'
-fi
+
 # One date to rule them all. One date to find them. One date to bring them all and in the darkness bind them.
 # When The clock hits the 00-minute mark, each speed test is run one after the other, but this approximates all timestamps as being on the hour
 date=$(date -d "$(date -d 'now' '+%H:00:00')")
 
-date_json=$(jq -n --argjson "$date" {} \
-              '$ARGS.named'
-)
-
 # json for all server names and speeds, each one added for each speedtest server loop
-servers_json=$(jq -n --argjson "$date" {} \
-              '$ARGS.named'
-)
+servers=""
 
-# Run the loop with output redirected to a process substitution
+# Run the loop with output redited to a process substitution
 while read -r p # The value of p is set by the "done < <(speedtest..." statement at the bottom of the loop
 do
         # Run the speedtest for the server with id of $p
@@ -59,28 +48,40 @@ do
                              "upload": ($upload | tonumber)
                             }')
         # Nest upload and download speeds json into the server name json
-	new_server_json=$(jq -n --argjson "$server_name" "$download_upload_json" \
-		-r '$ARGS.named')
-        # Merge the server name json into the date json
+	new_server_json=$(printf '"%s":%s,' "$server_name" "$download_upload_json")
 
-        date_json=$('$servers_json' | jq --argjson new_server_entry "$new_server_json" + $new_server_entry)
-        # date_json=$(jq --argjson existing_entries "$servers_json" \
-        #         --argjson new_server_entry "$new_server_json" \
-        #         '$existing_entries + $new_server_entry' <<< '$existing_entries')
-                # '$existing[$parent] += {($key): $value}' <<< ""
-done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}' | awk 'FNR <= 2 {print $1}')
+        servers=$(printf '%s%s' "$servers" "$new_server_json")
+
+done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}' | awk 'FNR <= 4 {print $1}')
 #done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}')
+
+servers_json=$(printf '{%s}' "${servers::-1}")
+
+date_json=$(printf '"%s":%s' "$date" "$servers_json")
+
+echo "date_json:"
+jq '.' <<< "$date_json"
+echo "existing_data:"
+jq '.' <<< "$existing_data"
 
 # Now that all the data is collected and stored in the date_json variable, save it to the file under the '.speedtest' object
 # Merge the existing data with the new object using jq and the "*" operator
 
-# ERROR: the variable $existing_data is empty and this is what's causing the code to break
-echo "$existing_data"
-updated_data=$(jq --argjson existing_data "$existing_data" --argjson date_json "$date_json" \
-                '.speedtest += $date_json' <<<"$existing_data")
+# Check if the '.speedtest' object exists in the existing JSON data
+if ! [ $(jq 'has("speedtest")' <<< "$existing_data") ]; then
+        # Create the .speedtest object if it doesn't exist
+        echo "no speedtest found in \$existing_data"
+        updated_data=$(printf '{"speedtest":{%s}}' "$date_json")
+else
+        updated_data=$(printf '%s,%s}}' "${existing_data::-2}" "$date_json")
+fi
+
+echo "updated data:"
+echo "$updated_data"
+jq '.' <<< "$updated_data"
 
 # Overwrite the file with the updated JSON data
-$(echo "$updated_data" | tee "$data_file") || $(echo "$updated_data" | sudo tee "$data_file")
+echo "$updated_data" | tee "$data_file" || echo "$updated_data" | sudo tee "$data_file"
 
 # This section is so that you don't have to keep your computer on all the time to passively run this script
 # This uses rtcwake (Real Time Clock Wake) and xprintidle (prints time the computer has been idle in ms)
