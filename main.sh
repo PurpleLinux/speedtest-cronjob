@@ -52,8 +52,7 @@ do
 
         servers=$(printf '%s%s' "$servers" "$new_server_json")
 
-done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}' | awk 'FNR <= 4 {print $1}')
-#done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}')
+done < <(speedtest -L | awk 'FNR >= 5 && FNR <=6 {print $1}')
 
 servers_json=$(printf '{%s}' "${servers::-1}")
 
