@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set the working directory inside the script
+cd /home/boaz/Documents/speedtest-cronjob
+
 # Set file path of where you want to save the speed test data
 data_file="./speedtest_data.json"
 
@@ -8,11 +11,14 @@ if [ -e "$data_file" ] && [ -r "$data_file" ] && [ -w "$data_file" ]; then
 	:  # File exists, is readable and writeable. No action needed.
 elif ! [ -e "$data_file" ]; then
 	$(umask 066 && touch "$data_file") || $(sudo umask 066 && sudo touch "$data_file")
+	chmod a+r "$data_file"
 elif ! [ -r "$data_file" ]; then
 	chmod u+r "$data_file" || sudo chmod u+r "$data_file"
 elif ! [ -w "$data_file" ]; then
 	chmod u+w "$data_file" || sudo chmod u+w "$data_file"
 fi
+
+chmod a+r "$data_file"
 
 # set existing data from file to variable
 existing_data=$(<"$data_file")
@@ -57,7 +63,7 @@ do
 	server_name_json=$(jq -n --argjson "$server_name" "$download_upload_json" \
 		-r '$ARGS.named')
         # Merge the server name json into the date json
-	echo "pre-merge server_name_json value: "$server_name_json
+	echo "Running speedtest for: "$server_name_json
         date_json=$(jq --argjson existing_entries "$date_json" --argjson new_server_entry "$server_name_json" \
                 '. * $new_server_entry' <<< "$date_json")
 done < <(speedtest -L | awk 'FNR >= 5 {print $1}')
