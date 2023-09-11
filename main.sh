@@ -79,7 +79,7 @@ updated_data=$(jq --argjson existing_data "$existing_data" --argjson date_json "
                 '.speedtest |= $date_json' <<<"$existing_data")
 
 # Overwrite the file with the updated JSON data
-echo "$updated_data" | sudo tee "$data_file"
+echo "$updated_data" | sudo tee -a "$data_file"
 
 # This section is so that you don't have to keep your computer on all the time to passively run this script
 # This uses rtcwake (Real Time Clock Wake) and xprintidle (prints time the computer has been idle in ms)
