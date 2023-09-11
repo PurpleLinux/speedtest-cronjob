@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set path variable
+export PATH=/usr/local/bin:/usr/bin:/bin
+
 # Set the working directory inside the script
 cd /home/boaz/Documents/speedtest-cronjob
 
