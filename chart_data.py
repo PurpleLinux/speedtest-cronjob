@@ -65,9 +65,5 @@ with open(input_file_path, 'r') as file:
             lines += line
             i += 1
 
-plot(speedtest_list)
-# Print or use the resulting list of JSON objects
-# for i in range(100):
-#     print(speedtest_list[i])
-#     print("---")
-#json_object = json.loads(speedtest_list[-2])
+#plot(speedtest_list)
+print(speedtest_list)
