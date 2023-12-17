@@ -65,5 +65,4 @@ with open(input_file_path, 'r') as file:
             lines += line
             i += 1
 
-#plot(speedtest_list)
-print(speedtest_list)
+plot(speedtest_list)
