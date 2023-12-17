@@ -1,5 +1,10 @@
 # speedtest-cronjob
 
+### Graphical summary:
+
+![image](https://github.com/quetzelquot/speedtest-cronjob/assets/53280166/5bee204c-4763-4c7a-84fe-26d5eac43c07)
+
+
 ### What it is / the problem it solves
 
 How fast is your internet? Your ISP says you have gigabit fiber, but do you really get 1Gb down all the time? Most of us know we get less than promised, but by how much? If you want to check this, you'll probably go to a website like speedtest.net and run a speedtest. But this is a snapshot, it only shows your speed in that instant. If you want speed data over time, you can get this in one of two ways:
