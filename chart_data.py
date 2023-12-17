@@ -1,5 +1,6 @@
 import json
 import re
+from make_graph import plot
 
 def print_formatted_json(data):
     formatted_json = json.dumps(data, indent=2)
@@ -64,7 +65,7 @@ with open(input_file_path, 'r') as file:
             lines += line
             i += 1
 
-print(speedtest_list[-1])
+plot(speedtest_list)
 # Print or use the resulting list of JSON objects
 # for i in range(100):
 #     print(speedtest_list[i])
