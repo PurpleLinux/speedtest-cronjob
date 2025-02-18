@@ -19,7 +19,7 @@ How fast is your internet? Your ISP says you have gigabit fiber, but do you real
 
 ![image](https://github.com/quetzelquot/speedtest-cronjob/assets/53280166/433fcea3-705d-4241-bfe8-a35959cbfa39)
 
-#### Option 2: As Frank Sanatra suggested, do it my way (with code, automated, yaaaay!)
+#### Option 2: As Frank Sanatra suggested, do it my way (with code, automated)
 
 Im assuming you have python3 installed and can can run pip3 install X on your own if needed.
 
